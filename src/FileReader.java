@@ -8,8 +8,7 @@ import java.util.Scanner;
 
 public class FileReader implements IFileReader {
     public static final String PATH_NAME = "Words.txt";
-    public List<String> Read() {
-
+    public List<String> read() {
         try{
             List<String> words = new ArrayList<>();
             File file = new File(PATH_NAME);
@@ -18,6 +17,7 @@ public class FileReader implements IFileReader {
                 String word = in.nextLine();
                 words.add(word);
             }
+            in.close();
             return words;
         }catch (FileNotFoundException ex){
             return null;

@@ -1,5 +1,5 @@
 package enums;
 
 public enum Levels {
-    EASY,HARD,EASYH,HARDH
+    EASY,HARD,EASYH,HARDH,NONE
 }
