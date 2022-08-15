@@ -1,9 +1,6 @@
-import enums.Levels;
 import enums.StateGame;
 import game.MemoryGame;
 import interfaces.IFileReader;
-import level.Level;
-
 import java.util.*;
 
 public class Main {
@@ -14,8 +11,8 @@ public class Main {
         StateGame state = StateGame.START;
 
         List<String> words = reader.read();
-        if(words == null) {
-            System.out.println("No file found");
+        if(words == null && words.size() < 8 ) { //check if file isn't missing and if minimum number of word is correct for the hardest level
+            System.out.println("Something goes wrong (no file found)");
             state = StateGame.ERROR;
         }
 
@@ -24,7 +21,7 @@ public class Main {
         //Main loop of MemoryGame
         do{
             if(state.equals(StateGame.START)){
-                memoryGame.initGame();
+                memoryGame.initGame(); //match
                 state = StateGame.STOP;
             }
             if(state.equals(StateGame.STOP)){
@@ -48,25 +45,6 @@ public class Main {
 
 
         }while(!state.equals(StateGame.EXIT) && !state.equals(StateGame.ERROR));
-
-//        Map<Levels, Level> difficuty = new HashMap<>();
-//        difficuty.put(Levels.EASY,new Level( 4, 10,Levels.EASY));
-//        difficuty.put(Levels.HARD, new Level(8,15,Levels.HARD));
-//
-//        IFileReader reader = new FileReader();
-//        List<String> words = reader.read();
-//        if(words == null){
-//            System.out.println("No file found");
-//        }else{
-//            System.out.println(words.size());
-//            for (String word : words) {
-//                System.out.println(word);
-//            }
-//         }
-
-
-
-
 
     }
 }

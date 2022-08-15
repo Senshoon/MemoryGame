@@ -1,136 +1,218 @@
 package game;
 
 import enums.Levels;
-import enums.StateGame;
 import level.Level;
 
 import java.util.*;
 
+import static game.Board.CODE_A;
+import static game.Board.NUM_COL;
+
 public class MemoryGame {
     private List<String> words;
-    private  Map<Levels, Level> difficulty = new HashMap<>();
-    private  List<Pair> pairs = new ArrayList<>();
+    private Map<Levels, Level> difficulty = new HashMap<>();
+    private List<Pair> pairs = new ArrayList<>();
     private Levels currentLevel = Levels.NONE;
     private Pair firstChoice = null;
-    private int counter = 0;
+    private int counterChances;
+    private int counterFoundedPair;
+    private boolean fail = false;
 
     public MemoryGame(List<String> words) {
         this.words = words;
-        difficulty.put(Levels.EASY,new Level( 4, 10,Levels.EASY));
-        difficulty.put(Levels.HARD, new Level(8,15,Levels.HARD));
+        difficulty.put(Levels.EASY, new Level(4, 10, Levels.EASY));
+        difficulty.put(Levels.HARD, new Level(8, 15, Levels.HARD));
     }
 
-    private void createPair(){
+    private void createPair() {
         Level current = this.difficulty.get(this.currentLevel);
         List<String> randomWords = current.draw(this.words);
 
-        if(randomWords != null){
+        if (randomWords != null) {
             List<Position> positions = Board.initBoard(current);
-            for(String word: randomWords){
+            for (String word : randomWords) {
                 Position pos1 = positions.get(0);
                 positions.remove(0);
                 Position pos2 = positions.get(0);
                 positions.remove(0);
                 Card card1 = new Card(pos1);
                 Card card2 = new Card(pos2);
-                Pair pair = new Pair(word, card1, card2,false);
+                Pair pair = new Pair(word, card1, card2);
                 this.pairs.add(pair);
             }
 
         }
 
     }
-    private void game(){
+
+    private void game() {
 
         System.out.println("Welcome!");
         this.difficultyChoice();
-        int chances = this.difficulty.get(this.currentLevel).getChances();
+        Level level = this.difficulty.get(this.currentLevel);
+        int chances = level.getChances();
+        this.counterChances = chances;
+        this.counterFoundedPair = 0;
         this.createPair();
 
-        do{
-            Board.displayBoard(this.pairs);
-            if(this.firstChoice == null){
-                this.userChoices();
+        do {
+            Board.displayBoard(this.pairs, level.getType(), this.counterChances);
+            if (this.firstChoice == null) {
+                this.revealFirstWord();
+            } else {
+                this.revealSecondWord();
             }
+        } while (this.counterChances != 0 && this.counterFoundedPair != this.pairs.size());
 
-        }while(this.counter != chances);
-        Board.displayBoard(this.pairs);
+        if (this.counterChances == 0) {
+            System.out.println("Sorry, you loose!");
+        } else {
+            Board.displayBoard(this.pairs, level.getType(), this.counterChances);
+            System.out.println("You win!");
+        }
     }
-    public void initGame(){
+
+    public void initGame() {
         this.currentLevel = Levels.NONE;
-        this.pairs.clear();
+        this.firstChoice = null;
+        this.pairs.clear();   //cleaning all pairs, when game is restarted
         this.game();
     }
 
-    private void difficultyChoice(){
+    private void difficultyChoice() {
         Scanner scanner = new Scanner(System.in);
 
         do {
             System.out.println("Choose game difficulty (0 - EASY, 1 - HARD): ");
-            try{
+            try {
                 Integer input = Integer.valueOf(scanner.nextLine());
 
-                if(input == 0 || input == 1){
+                if (input == 0 || input == 1) {
                     this.currentLevel = Levels.values()[input];
-                }else{
+                } else {
                     System.out.println("You tap incorrect value!");
                 }
 
-            }catch (NumberFormatException | NoSuchElementException | IllegalStateException ex){
+            } catch (NumberFormatException | NoSuchElementException | IllegalStateException ex) {
                 System.err.println("Something goes wrong, try again");
 
             }
 
-        }while(this.currentLevel.equals(Levels.NONE));
+        } while (this.currentLevel.equals(Levels.NONE));
 
     }
 
-    private void userChoices(){
+    private Position userChoices() {
+        Position pos = null;
         Scanner scanner = new Scanner(System.in);
+        int numRow = (2*pairs.size()) / NUM_COL;
+        char max = (char) (CODE_A + numRow);       // max value of rows in ASCII code
+        System.out.println("Select and tap the coordination of card to reveal");
 
-        System.out.println("Select and tap he coordination of card to reveal");
-
-        do{
-            try{
+        do {
+            try {
                 String cords = scanner.nextLine().toUpperCase(Locale.ROOT);
-                if(cords.length() == 2){
+                if (cords.length() == 2) {
                     int col = Integer.parseInt(cords.charAt(1) + "") - 1; // col starting  number from 0
-                    int row = (cords.charAt(0)-65);
-                    for (Pair pair : this.pairs) {
-                        if(!pair.isFound()){
-                            boolean isChoice = false;
-                            if(pair.getCard1().getPosition().getCol() == col && pair.getCard1().getPosition().getRow() == col){
-                                if(!pair.getCard1().isReveal()){
-                                    isChoice = true;
-                                    pair.getCard1().setReveal(true);
-                                }else{
-                                    System.out.println("Sorry, this word is already reveal!");
-                                }
+                    int row = (cords.charAt(0) - Board.CODE_A);
+                    if (0 <= col && col < (NUM_COL) && 0 <= row && row < numRow)  {
 
-                            }else if(pair.getCard2().getPosition().getCol() == row && pair.getCard2().getPosition().getRow() == row){
-                                if(!pair.getCard2().isReveal()){
-                                    isChoice = true;
-                                    pair.getCard2().setReveal(true);
-                                }else{
-                                    System.out.println("Sorry, this word is already reveal!");
-                                }
-                            }
-
-                            if(isChoice){
-                                this.firstChoice = pair;
-                            }
-                        }else{
-                            System.out.println("Sorry, this word is already reveal!");
-                        }
+                    boolean isReveal = posIsAlreadyReveal(col, row);
+                    if (!isReveal) {
+                        pos = new Position(col, row);
+                    } else {
+                        System.out.println("Sorry, this word is already reveal!");
                     }
+                    }else{
+                        System.out.println("Wrong coordinates, choose between A-" + ((char) (CODE_A + numRow - 1))  + " and between 1-" + NUM_COL);
+                    }
+                }else{
+                    System.out.println("Wrong coordinates, use correct ones ex. B2");
 
                 }
-            }catch (NumberFormatException | NoSuchElementException | IllegalStateException ex){
+            } catch (NumberFormatException | NoSuchElementException | IllegalStateException ex) {
                 System.err.println("Something goes wrong, try again");
-
             }
-        }while(this.firstChoice == null);
+        } while (pos == null);
 
+        return pos;
     }
 
+    private boolean posIsAlreadyReveal(int col, int row) {
+        boolean isReveal = false;
+        for (Pair pair : this.pairs) {
+
+            if (pair.getCard1().getPosition().compare(col, row)) {
+                if (pair.getCard1().isReveal()) {
+                    isReveal = true;
+                }
+            } else if (pair.getCard2().getPosition().compare(col, row)) {
+                if (pair.getCard2().isReveal()) {
+                    isReveal = true;
+                }
+
+            }
+        }
+        return isReveal;
+    }
+
+    //player enter coordinate for first time word which will be revealed
+    private void revealFirstWord() {
+        Position pos = userChoices();
+        if (pos != null) {
+            int col = pos.getCol();
+            int row = pos.getRow();
+            for (Pair pair : this.pairs) {
+                boolean isChoice = false;
+                if (pair.getCard1().getPosition().compare(col, row)) {
+                    if (!pair.getCard1().isReveal()) {
+                        isChoice = true;
+                        pair.getCard1().setReveal(true);
+                    }
+                } else if (pair.getCard2().getPosition().compare(col, row)) {
+                    if (!pair.getCard2().isReveal()) {
+                        isChoice = true;
+                        pair.getCard2().setReveal(true);
+
+                    }
+                }
+                if (isChoice) {
+                    this.firstChoice = pair;
+                }
+            }
+        }
+    }
+
+    private void revealSecondWord() {
+        Position pos = userChoices() ;
+            if (pos != null){
+                int col = pos.getCol();
+                int row = pos.getRow();
+                Card card = null;
+                if (!this.firstChoice.getCard1().isReveal()) {
+                    card = this.firstChoice.getCard1();
+                } else if (!this.firstChoice.getCard2().isReveal()) {
+                    card = this.firstChoice.getCard2();
+                }
+                if (card.getPosition().compare(col, row)) {
+                    card.setReveal(true);
+                    this.counterFoundedPair++;
+                    this.firstChoice = null;    //reset
+                } else {
+                    System.out.println("You missed");
+                    this.counterChances--;
+                    hideFirstWord();
+                    this.firstChoice = null;
+                }
+            }
+    }
+    //TEST
+    private void hideFirstWord(){
+        boolean card1 = this.firstChoice.getCard1().isReveal();
+        boolean card2 = this.firstChoice.getCard2().isReveal();
+        if(card1 == true) this.firstChoice.getCard1().setReveal(false);
+        else if(card2 == true)this.firstChoice.getCard2().setReveal(false);
+
+
+    }
 }

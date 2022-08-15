@@ -37,7 +37,7 @@ public class Level implements IDraw<String> {
             return null;
 
         Collections.shuffle(list);
-        List<String> randomSeries = list.subList(0, this.numberWords);
+        List<String> randomSeries = list.subList(0, this.numberWords);//randomizing words, number depending on selected level
 
         return randomSeries;
     }

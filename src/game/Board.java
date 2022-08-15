@@ -1,7 +1,9 @@
 package game;
 
+import enums.Levels;
 import level.Level;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,8 +33,12 @@ public class Board {
     return positions;
     }
 
-    public static void displayBoard(List<Pair> pairs) {
+    public static void displayBoard(List<Pair> pairs, Levels level, int chances) {
         int numRow = (2*pairs.size()) / NUM_COL;
+//        System.out.print("\033[H\033[2J");  cleaning command console
+//        System.out.flush();
+        System.out.println("Level " + level.toString());
+        System.out.println("Guess chance " + chances);
         System.out.print(" ");
         for(int i = 1; i <= NUM_COL; i++ ){
             System.out.print(i+" ");
@@ -45,27 +51,22 @@ public class Board {
                 for (Pair pair: pairs) {
                     boolean display = false;
                     boolean isFirstChoice = false;
-                    if(pair.getCard1().getPosition().getCol() == j && pair.getCard1().getPosition().getRow() == i){
-
+                    if(pair.getCard1().getPosition().compare(j, i)){
                         isFirstChoice = pair.getCard1().isReveal();
                         display = true;
-                    }else if(pair.getCard2().getPosition().getCol() == j && pair.getCard2().getPosition().getRow() == i){
+                    }else if (pair.getCard2().getPosition().compare(j, i)){
                         isFirstChoice = pair.getCard2().isReveal();
                         display = true;
                     }
                     if(isFirstChoice){
-                        System.out.print(ANSI_GREEN+ pair.getWord()+ " "+ANSI_RESET);
+                        System.out.print(ANSI_GREEN + pair.getWord()+ " " + ANSI_RESET);
                     }else if(display){
-                        System.out.print(pair.getWord()+ " ");
+                        System.out.print("X" + " ");
                     }
                 }
-                //positions.add(new Position(j,i));
-
             }
             System.out.println("");
         }
-
-
     }
 
 }

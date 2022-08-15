@@ -16,6 +16,11 @@ public class Position {
     public int getRow() {
         return row;
     }
+    //checking if row and col point to this position
+    public boolean compare(int col, int row){
+        boolean isMatching = col == this.col && row == this.row;
+        return isMatching;
+    }
 
 }
 
